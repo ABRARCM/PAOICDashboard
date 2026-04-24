@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PA OIC Dashboard — Abra Health Group</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Poppins', sans-serif; margin: 0; padding: 0; min-height: 100vh; }
+  #login-screen {
+    display: flex; align-items: center; justify-content: center; min-height: 100vh;
+    background: linear-gradient(135deg, #023E8A 0%, #0077B6 50%, #00B4D8 100%); padding: 20px;
+  }
+  .login-container {
+    background: #ffffff; border-radius: 24px; padding: 48px 40px; max-width: 440px;
+    width: 100%; box-shadow: 0 25px 60px rgba(0,0,0,0.3); text-align: center;
+  }
+  .login-logo { width: 200px; margin-bottom: 12px; }
+  .login-subtitle { font-size: 14px; color: #64748b; margin-bottom: 8px; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; }
+  .login-title { font-size: 28px; font-weight: 800; color: #023E8A; margin-bottom: 8px; }
+  .login-desc { font-size: 15px; color: #64748b; margin-bottom: 32px; }
+  .login-input-group { position: relative; margin-bottom: 20px; }
+  .login-input-group svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; fill: #64748b; }
+  .login-input {
+    width: 100%; padding: 16px 16px 16px 48px; border: 2px solid #e2e8f0; border-radius: 12px;
+    font-family: 'Poppins', sans-serif; font-size: 16px; outline: none; transition: border-color 0.3s;
+  }
+  .login-input:focus { border-color: #00B4D8; }
+  .login-btn {
+    width: 100%; padding: 16px; background: linear-gradient(135deg, #0077B6, #00B4D8); color: white;
+    border: none; border-radius: 12px; font-family: 'Poppins', sans-serif; font-size: 17px;
+    font-weight: 700; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; letter-spacing: 0.5px;
+  }
+  .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,119,182,0.4); }
+  .login-error { color: #FF6B6B; font-size: 14px; font-weight: 600; margin-top: 12px; display: none; }
+  .login-footer { margin-top: 24px; font-size: 12px; color: #64748b; }
+  #dashboard { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+  #dashboard iframe { width: 100%; height: 100%; border: none; }
+</style>
+</head>
+<body>
+<div id="login-screen">
+  <div class="login-container">
+    <img src="https://abrahealthgroup.com/wp-content/uploads/2022/09/Asset-48@4x-copy.png" alt="Abra Health Group" class="login-logo">
+    <div class="login-subtitle">RCM Team Portal</div>
+    <div class="login-title">PA Outstanding Claims</div>
+    <div class="login-desc">Enter password to access the dashboard</div>
+    <form id="login-form" onsubmit="return attemptLogin()">
+      <div class="login-input-group">
+        <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1s3.1 1.39 3.1 3.1v2z"/></svg>
+        <input type="password" id="password-input" class="login-input" placeholder="Enter password" autofocus>
+      </div>
+      <button type="submit" class="login-btn">Access Dashboard</button>
+    </form>
+    <div class="login-error" id="login-error">Incorrect password. Please try again.</div>
+    <div class="login-footer">Abra Health Group &mdash; Confidential</div>
+  </div>
+</div>
+<div id="dashboard">
+  <iframe id="dash-frame" src="about:blank"></iframe>
+</div>
+<script>
+  const CORRECT_PASSWORD = 'PAOIC2026';
+  function attemptLogin() {
+    const input = document.getElementById('password-input').value;
+    if (input === CORRECT_PASSWORD) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('dash-frame').src = 'dashboard.html';
+      sessionStorage.setItem('paoic_auth', 'true');
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+      document.getElementById('password-input').value = '';
+      document.getElementById('password-input').focus();
+    }
+    return false;
+  }
+  if (sessionStorage.getItem('paoic_auth') === 'true') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('dash-frame').src = 'dashboard.html';
+  }
+</script>
+</body>
+</html>
