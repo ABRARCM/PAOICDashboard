@@ -242,13 +242,13 @@ body { font-family:'Poppins',sans-serif; background:linear-gradient(180deg,#f0f4
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyDGrrSEJv7u1WSHaQZeGrJhyR_YOUEq3bQ",
-  authDomain: "ct-oic-abra.firebaseapp.com",
-  databaseURL: "https://ct-oic-abra-default-rtdb.firebaseio.com",
-  projectId: "ct-oic-abra",
-  storageBucket: "ct-oic-abra.firebasestorage.app",
-  messagingSenderId: "271697959739",
-  appId: "1:271697959739:web:8cd8e18eece47fd348f51e"
+  apiKey: "AIzaSyBI2p1zjqQ8uC5uZSFtEaCU2slg_XlW7Nc",
+  authDomain: "pa-oic-abra.firebaseapp.com",
+  databaseURL: "https://pa-oic-abra-default-rtdb.firebaseio.com",
+  projectId: "pa-oic-abra",
+  storageBucket: "pa-oic-abra.firebasestorage.app",
+  messagingSenderId: "490552352954",
+  appId: "1:490552352954:web:1802fbd277647cd3726283"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -288,7 +288,7 @@ async function switchMonth(monthKey) {
   document.getElementById('loadingOverlay').style.display = 'flex';
   currentMonthKey = monthKey;
   DATA = await loadMonthData(monthKey);
-  const prefix = 'pa-oic/' + monthKey;
+  const prefix = monthKey;
   fbWorked = {}; fbActions = {}; fbAssignees = {}; fbActionDates = {};
   const [wSnap, aSnap, asSnap, adSnap] = await Promise.all([
     db.ref(prefix + '/worked').once('value'),
