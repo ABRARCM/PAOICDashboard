@@ -228,9 +228,10 @@ def embed_into_html(target_filename, months):
     # Build EMBEDDED_DATA line
     embedded_line = f"const EMBEDDED_DATA = {json.dumps(embedded, separators=(',', ':'))};"
 
-    # Replace existing lines in HTML (use lambda to avoid backslash interpretation in replacement)
-    html = re.sub(r'const MONTHS_DATA = .*?;', lambda m: months_line, html)
-    html = re.sub(r'const EMBEDDED_DATA = .*?;', lambda m: embedded_line, html)
+    # Replace existing lines in HTML. Use ^...$ in MULTILINE mode (not non-greedy .*?;)
+    # because trackNote strings can contain ';' which would truncate the match early.
+    html = re.sub(r'^const MONTHS_DATA = .*$', lambda m: months_line, html, flags=re.MULTILINE)
+    html = re.sub(r'^const EMBEDDED_DATA = .*$', lambda m: embedded_line, html, flags=re.MULTILINE)
 
     with open(target_path, "w") as f:
         f.write(html)
