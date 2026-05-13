@@ -204,10 +204,13 @@ def update_months_json(month_key, label, date_str):
     return months
 
 
-def embed_into_dashboard(months):
-    """Re-embed all month data into dashboard.html."""
-    dashboard_path = os.path.join(DASHBOARD_DIR, "dashboard.html")
-    with open(dashboard_path, "r") as f:
+def embed_into_html(target_filename, months):
+    """Re-embed all month data into the given HTML file (dashboard.html or performance.html)."""
+    target_path = os.path.join(DASHBOARD_DIR, target_filename)
+    if not os.path.exists(target_path):
+        print(f"  [WARN] {target_path} not found — skipping")
+        return
+    with open(target_path, "r") as f:
         html = f.read()
 
     # Load all month JSONs into embedded data dict
@@ -229,10 +232,10 @@ def embed_into_dashboard(months):
     html = re.sub(r'const MONTHS_DATA = .*?;', lambda m: months_line, html)
     html = re.sub(r'const EMBEDDED_DATA = .*?;', lambda m: embedded_line, html)
 
-    with open(dashboard_path, "w") as f:
+    with open(target_path, "w") as f:
         f.write(html)
-    size_mb = os.path.getsize(dashboard_path) / (1024 * 1024)
-    print(f"  Embedded into: {dashboard_path} ({size_mb:.1f} MB)")
+    size_mb = os.path.getsize(target_path) / (1024 * 1024)
+    print(f"  Embedded into: {target_path} ({size_mb:.1f} MB)")
 
 
 # ── Main ─────────────────────────────────────────────────────────────────────
@@ -268,9 +271,10 @@ def main():
     print("\nUpdating months.json...")
     months = update_months_json(month_key, month_label, date_str)
 
-    # Embed into dashboard
-    print("\nEmbedding data into dashboard.html...")
-    embed_into_dashboard(months)
+    # Embed into both dashboard.html and performance.html so they stay in sync
+    print("\nEmbedding data into dashboard.html and performance.html...")
+    embed_into_html("dashboard.html", months)
+    embed_into_html("performance.html", months)
 
     print(f"\n{'='*60}")
     print(f"DONE! {len(records):,} claims for {month_label}")
