@@ -312,7 +312,14 @@ tr.row-untouched { background:#ffe0e0 !important; }
     <option value="">Unspecified</option>
   </select>
   <label>Assigned:</label>
-  <input type="text" id="fAssignee" placeholder="Initials..." style="width:80px;">
+  <select id="fAssignee" style="width:90px;">
+    <option value="">All</option>
+    <option value="AB">AB</option>
+    <option value="KC">KC</option>
+    <option value="LE">LE</option>
+    <option value="LJ">LJ</option>
+    <option value="__unassigned__">Unassigned</option>
+  </select>
   <label>Status:</label>
   <select id="fWorked">
     <option value="all">All</option>
@@ -575,22 +582,32 @@ function updateVisibleCells() {
     inputs.forEach(inp => {
       const id = inp.dataset.id;
       if (document.activeElement === inp) return; // don't clobber active typing
-      if (inp.placeholder === 'Add notes...') {
-        // This is the remarks input
-        const rmVal = fbRemarks[id] || '';
-        if (inp.value !== rmVal) {
-          inp.value = rmVal;
-          inp.classList.toggle('has-text', !!rmVal.trim());
-        }
-      } else if (inp.placeholder === '...') {
-        // This is the assignee input
-        const asVal = fbAssignees[id] || '';
-        if (inp.value !== asVal) {
-          inp.value = asVal;
-          inp.classList.toggle('has-text', !!asVal);
-        }
+      const rmVal = fbRemarks[id] || '';
+      if (inp.value !== rmVal) {
+        inp.value = rmVal;
+        inp.classList.toggle('has-text', !!rmVal.trim());
       }
     });
+    // Assignee dropdown — skip if user is actively editing it
+    const asSel = row.querySelector('.assignee-select');
+    if (asSel && document.activeElement !== asSel) {
+      const id = asSel.dataset.id;
+      const asVal = (fbAssignees[id] || '').toUpperCase();
+      if (asSel.value !== asVal) {
+        const known = ['AB','KC','LE','LJ'];
+        // If incoming value is unknown, ensure an option exists for it
+        if (asVal && !known.includes(asVal) && !Array.from(asSel.options).some(o => o.value === asVal)) {
+          const opt = document.createElement('option');
+          opt.value = asVal;
+          opt.textContent = asVal + '*';
+          asSel.insertBefore(opt, asSel.options[1] || null);
+        }
+        asSel.value = asVal;
+        asSel.classList.toggle('has-text', !!asVal);
+        if (asVal) { asSel.style.background='#f0f8ff'; asSel.style.borderColor='#0077B6'; }
+        else { asSel.style.background=''; asSel.style.borderColor='#ccc'; }
+      }
+    }
     // Action date (read-only text cell) — update via the worked-select id
     if (wSel) {
       const id = wSel.dataset.id;
@@ -821,7 +838,7 @@ function applyFilters() {
     if(carrierSet.size>0&&!carrierSet.has(r.carrier))return false;
     if(providerSet.size>0&&!providerSet.has(r.provider))return false;
     if(claimLevel!=='all'){if(claimLevel===''&&r.claimLevel!=='')return false;if(claimLevel!==''&&r.claimLevel!==claimLevel)return false;}
-    if(assignee){const a=(fbAssignees[r.id]||'').toUpperCase();if(!a.includes(assignee))return false;}
+    if(assignee){const a=(fbAssignees[r.id]||'').toUpperCase();if(assignee==='__UNASSIGNED__'){if(a)return false;}else if(a!==assignee)return false;}
     if(worked!=='all'){const w=fbWorked[r.id]||'';if(worked===''&&w!=='')return false;if(worked!==''&&w!==worked)return false;}
     if(search){const s=`${r.patNum} ${r.id} ${r.carrier} ${r.provider}`.toLowerCase();if(!s.includes(search))return false;}
     return true;
@@ -881,7 +898,7 @@ function renderTable() {
       <td class="money">$${r.billedFee.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
       <td>${r.trackDate}</td>
       <td class="note-cell"><div class="note-text" onclick="this.classList.toggle('expanded')">${esc(r.trackNote)}</div></td>
-      <td><input class="remarks-input${(fbAssignees[r.id]||'')?' has-text':''}" data-id="${r.id}" value="${escAttr(fbAssignees[r.id]||'')}" onchange="saveAssignee(this)" placeholder="..." style="width:65px;text-align:center;text-transform:uppercase;font-weight:600;"></td>
+      <td>${(()=>{const av=(fbAssignees[r.id]||'').toUpperCase();const opts=['AB','KC','LE','LJ'];const extra=av&&!opts.includes(av)?`<option value="${escAttr(av)}" selected>${esc(av)}*</option>`:'';return `<select class="assignee-select${av?' has-text':''}" data-id="${r.id}" onchange="saveAssignee(this)" style="width:75px;text-align:center;font-weight:600;font-size:11px;padding:3px 4px;border:1px solid #ccc;border-radius:4px;font-family:'Poppins',sans-serif;${av?'background:#f0f8ff;border-color:#0077B6;':''}"><option value=""${!av?' selected':''}>--</option>${extra}<option value="AB"${av==='AB'?' selected':''}>AB</option><option value="KC"${av==='KC'?' selected':''}>KC</option><option value="LE"${av==='LE'?' selected':''}>LE</option><option value="LJ"${av==='LJ'?' selected':''}>LJ</option></select>`;})()}</td>
       <td><select class="worked-select ${wClass}" data-id="${r.id}" onchange="saveWorked(this)">
         <option value=""${wVal===''?' selected':''}>-- Select --</option>
         <option value="completed"${wVal==='completed'?' selected':''}>Completed (Paid)</option>
@@ -916,10 +933,11 @@ function saveWorked(el){
   el.className='worked-select'+(val==='completed'?' status-completed':val==='inprogress'?' status-inprogress':'');
 }
 function saveAssignee(el){
-  const val = el.value.trim().toUpperCase();
-  el.value = val;
+  const val = (el.value||'').trim().toUpperCase();
   assigneeRef.child(el.dataset.id).set(val||null);
   el.classList.toggle('has-text', !!val);
+  if (val) { el.style.background='#f0f8ff'; el.style.borderColor='#0077B6'; }
+  else { el.style.background=''; el.style.borderColor='#ccc'; }
 }
 function saveAction(el){
   actionRef.child(el.dataset.id).set(el.value||null);
